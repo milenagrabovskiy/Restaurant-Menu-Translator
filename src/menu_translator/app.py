@@ -3,10 +3,11 @@ from flask_migrate import Migrate
 from pydantic import ValidationError
 
 from menu_translator.blueprints.health import health_bp
-from menu_translator.blueprints.menu_items import menu_item_bp
-from menu_translator.blueprints.restaurants import restaurants_bp
+from menu_translator.blueprints.menu_item_routes import menu_item_bp
+from menu_translator.blueprints.restaurant_routes import restaurants_bp
 from menu_translator.models.db_models.menu_item_orm import MenuItemRecord
 from menu_translator.models.db_models.restaurant_orm import RestaurantRecord
+from menu_translator.services.responses import RestaurantManagementError, AWSError, error_response
 
 from menu_translator.extensions import db
 
@@ -27,9 +28,30 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db) #app first then db
 
-
+    # blueprints
     app.register_blueprint(health_bp, url_prefix="/health")
     app.register_blueprint(restaurants_bp, url_prefix="/api/v1/restaurants")
-    app.register_blueprint(menu_item_bp, url_prefix="/api/v1/menu_items")
+    app.register_blueprint(menu_item_bp, url_prefix="/api/v1/restaurants")
+
+    # error handlers
+    @app.errorhandler(RestaurantManagementError)
+    def handle_restaurant_management_error(error: RestaurantManagementError):
+        return error_response(error.code, error.status, error.detail)
+
+
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(error: ValidationError):
+        first_error = error.errors()[0]
+        detail_str = f"{first_error['loc'][0]}:{first_error['msg']}"
+        return error_response("validation_failed", 422, detail_str)
+
+
+    @app.errorhandler(404)
+    def handle_not_found_error():
+        return error_response(code="resource_not_found", status=404, detail="The requested resource does not exist")
+
+
+
+
 
     return app

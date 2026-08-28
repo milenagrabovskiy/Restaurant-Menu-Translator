@@ -15,5 +15,5 @@ class RestaurantRecord(db.Model):
     menu_items: Mapped[list["MenuItemRecord"]] = (relationship
                                                   ("MenuItemRecord",
                                                    back_populates="restaurant",
-                                                   cascade="all, delete-orphan")
+                                                   cascade="all, delete-orphan")  # if a restaurant is deleted, all of its menu items are deleted as well
                                                   )
