@@ -42,7 +42,9 @@ def create_app():
     @app.errorhandler(ValidationError)
     def handle_validation_error(error: ValidationError):
         first_error = error.errors()[0]
-        detail_str = f"{first_error['loc'][0]}:{first_error['msg']}"
+        location = first_error['loc']
+        field = location[0] if location else "request"
+        detail_str = f"{field}:{first_error['msg']}"
         return error_response("validation_failed", 422, detail_str)
 
 

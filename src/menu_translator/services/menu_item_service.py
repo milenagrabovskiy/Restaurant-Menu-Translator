@@ -1,13 +1,17 @@
 """Menu item service layer for orchestrating business logic."""
 
 from menu_translator.stores import menu_item_store
-from menu_translator.models.menu_item import MenuItem, CreateMenuItemDto, UpdateMenuItemDto, DeleteMenuItemDto
+from menu_translator.models.menu_item import MenuItem, CreateMenuItemDto, UpdateMenuItemDto, DeleteMenuItemDto, \
+    CategoryAdapter
 from menu_translator.services.responses import RestaurantManagementError
 
 
-def get_menu_items(restaurant_id: int) -> list[MenuItem]:
 
-    return menu_item_store.find_menu_items_for_restaurant(restaurant_id)
+def get_menu_items(restaurant_id: int, category: str | None) -> list[MenuItem]:
+
+    if category is not None:
+        category = CategoryAdapter.validate_python(category)
+    return menu_item_store.find_menu_items_for_restaurant(restaurant_id, category)
 
 
 

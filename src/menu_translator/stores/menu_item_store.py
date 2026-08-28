@@ -8,8 +8,12 @@ from menu_translator.extensions import db
 
 
 
-def find_menu_items_for_restaurant(restaurant_id: int) -> list[MenuItem]:
+def find_menu_items_for_restaurant(restaurant_id: int, category:str | None=None) -> list[MenuItem]:
     stmt = select(MenuItemRecord).order_by(MenuItemRecord.id).where(MenuItemRecord.restaurant_id == restaurant_id)
+
+    if category is not None:
+        stmt = stmt.where(MenuItemRecord.category == category)
+
     records = db.session.scalars(stmt).all()
 
     return [MenuItem.model_validate(record) for record in records]

@@ -9,14 +9,13 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class Restaurant(BaseModel):
 
+    model_config = {"from_attributes": True}
+
     id: int
     name: str = Field(min_length=3)
     cuisine_type: str = Field()
-    default_menu_language: str = Field(default=None, min_length=2)
-
-
-    model_config = {"from_attributes": True}
-
+    default_menu_language: str = Field(min_length=2)
+    menu_item_count: int
 
 
 

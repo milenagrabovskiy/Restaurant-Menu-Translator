@@ -35,7 +35,8 @@ Support an optional ?lang= query parameter that returns the name/description tra
 @menu_item_bp.get("/<int:restaurant_id>/menu_items")
 def get_menu_items_by_restaurant(restaurant_id: int):
 
-    return list_response_wrapper(menu_item_service.get_menu_items(restaurant_id))
+    category = request.args.get("category")
+    return list_response_wrapper(menu_item_service.get_menu_items(restaurant_id, category))
 
 
 @menu_item_bp.get("/<int:restaurant_id>/menu_items/<int:menu_item_id>")

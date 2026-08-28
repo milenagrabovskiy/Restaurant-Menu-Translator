@@ -1,11 +1,11 @@
 from typing import Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, TypeAdapter
 
 
 Category = Literal["appetizer", "entree", "dessert", "beverage"]  # should be written in restaurant's own lang, convert? call AWS Translate
 
 
-
+CategoryAdapter = TypeAdapter(Category)
 
 class MenuItem(BaseModel):
 
