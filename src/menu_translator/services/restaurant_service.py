@@ -2,7 +2,7 @@
 
 from menu_translator.stores import restaurant_store
 from menu_translator.models.restaurant import Restaurant, DeleteRestaurantDto
-from menu_translator.responses import RestaurantManagementError
+from menu_translator.errors import RestaurantManagementError
 
 def get_all_restaurants() -> list[Restaurant]:
     return restaurant_store.get_all_restaurants()
