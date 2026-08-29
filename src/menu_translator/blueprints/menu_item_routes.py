@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request
 
 # from menu_translator.services.restaurant_service import find_restaurant_by_id
-from menu_translator.services.responses import single_response_wrapper, list_response_wrapper
+from menu_translator.responses import single_response_wrapper, list_response_wrapper
 from menu_translator.services import menu_item_service
-from menu_translator.services import restaurant_service
+from menu_translator.services.menu_image_service import import_menu_image
 
 menu_item_bp = Blueprint("menu_item", __name__)
 
@@ -28,15 +28,21 @@ Provide an endpoint listing all menu items for a restaurant,
 **TODO: with filter support by category.
 Support an optional ?lang= query parameter that returns the name/description translated into the requested language on the fly.
 """
-# @menu_item_bp.get("/<int:restaurant_id>/menu_items")
-# def get_menu_items_by_restaurant(restaurant_id: int):
-#     return list_response_wrapper(find_menu_items_for_restaurant(restaurant_id))
 
 @menu_item_bp.get("/<int:restaurant_id>/menu_items")
 def get_menu_items_by_restaurant(restaurant_id: int):
 
     category = request.args.get("category")
-    return list_response_wrapper(menu_item_service.get_menu_items(restaurant_id, category))
+    lang = request.args.get("lang")
+    min_price = request.args.get("min_price", type=float)
+    max_price = request.args.get("max_price", type=float)
+
+    menu_items = menu_item_service.get_menu_items(restaurant_id,
+                                             category, lang,
+                                             min_price,
+                                             max_price)
+
+    return list_response_wrapper(menu_items)
 
 
 @menu_item_bp.get("/<int:restaurant_id>/menu_items/<int:menu_item_id>")
@@ -73,3 +79,19 @@ Accept a multipart/form-data upload of a photographed menu page (JPG or PNG) tie
 Store the raw image in S3 and return a list of candidate menu items extracted from it for staff to review
 — extracted items are not saved automatically (see AI-Assisted Feature below).
 """
+
+@menu_item_bp.post("/<int:restaurant_id>/menu-import")
+def import_menu(restaurant_id: int):
+
+    file = request.files.get("file")
+
+    print(file)
+
+    # result = menu_item_service.import_menu_image(
+    #     restaurant_id,
+    #     file
+    # )
+
+
+    return import_menu_image(restaurant_id, file), 201
+    # return single_response_wrapper(result), 200

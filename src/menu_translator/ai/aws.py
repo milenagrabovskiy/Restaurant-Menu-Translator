@@ -2,7 +2,7 @@
 
 import boto3
 from functools import lru_cache
-from ai_support_api.config import AWS_PROFILE, AWS_REGION
+from menu_translator.config import AWS_PROFILE, AWS_REGION
 
 
 @lru_cache(maxsize=1)  # we only want to cache one thing that is returned from this fxn

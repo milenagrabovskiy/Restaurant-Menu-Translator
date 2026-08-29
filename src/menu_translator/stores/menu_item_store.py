@@ -1,3 +1,4 @@
+from decimal import Decimal
 
 from sqlalchemy import select, text
 
@@ -8,11 +9,23 @@ from menu_translator.extensions import db
 
 
 
-def find_menu_items_for_restaurant(restaurant_id: int, category:str | None=None) -> list[MenuItem]:
+def find_menu_items_for_restaurant(restaurant_id: int,
+                                   category:str | None=None,
+                                   min_price: float | None=None,
+                                   max_price: float | None=None
+                                   ) -> list[MenuItem]:
+    print(f"DEBUG -> max_price: {max_price} (type: {type(max_price)})")
+
     stmt = select(MenuItemRecord).order_by(MenuItemRecord.id).where(MenuItemRecord.restaurant_id == restaurant_id)
 
     if category is not None:
         stmt = stmt.where(MenuItemRecord.category == category)
+
+    if min_price is not None:
+        stmt = stmt.where(MenuItemRecord.price >= Decimal(str(min_price)))
+
+    if max_price is not None:
+        stmt = stmt.where(MenuItemRecord.price <= Decimal(str(max_price)))
 
     records = db.session.scalars(stmt).all()
 
@@ -27,11 +40,11 @@ def find_menu_item_by_id(restaurant_id: int, menu_item_id: int) -> MenuItem | No
     return MenuItem.model_validate(record) if record else None
 
 
-
-def create_new_menu_item(restaurant_id, menu_item_data: dict) -> MenuItem:
-    create_dto = CreateMenuItemDto.model_validate(menu_item_data)
-
-    record = MenuItemRecord(restaurant_id=restaurant_id, **create_dto.model_dump())
+def create_new_menu_item(record: MenuItemRecord) -> MenuItem:
+# def create_new_menu_item(restaurant_id, menu_item_data: dict) -> MenuItem:
+    # create_dto = CreateMenuItemDto.model_validate(menu_item_data)
+    #
+    # record = MenuItemRecord(restaurant_id=restaurant_id, **create_dto.model_dump())
 
     db.session.add(record)
     db.session.commit()

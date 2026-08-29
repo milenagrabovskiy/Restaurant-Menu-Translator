@@ -5,9 +5,7 @@ from pydantic import ValidationError
 from menu_translator.blueprints.health import health_bp
 from menu_translator.blueprints.menu_item_routes import menu_item_bp
 from menu_translator.blueprints.restaurant_routes import restaurants_bp
-from menu_translator.models.db_models.menu_item_orm import MenuItemRecord
-from menu_translator.models.db_models.restaurant_orm import RestaurantRecord
-from menu_translator.services.responses import RestaurantManagementError, AWSError, error_response
+from menu_translator.responses import RestaurantManagementError, error_response
 
 from menu_translator.extensions import db
 
@@ -49,7 +47,7 @@ def create_app():
 
 
     @app.errorhandler(404)
-    def handle_not_found_error():
+    def handle_not_found_error(error):
         return error_response(code="resource_not_found", status=404, detail="The requested resource does not exist")
 
 
