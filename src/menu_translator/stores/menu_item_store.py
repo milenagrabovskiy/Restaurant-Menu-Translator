@@ -7,14 +7,13 @@ from menu_translator.models.menu_item import MenuItem, UpdateMenuItemDto, Create
 from menu_translator.extensions import db
 
 
-
-
 def find_menu_items_for_restaurant(restaurant_id: int,
                                    category:str | None=None,
                                    min_price: float | None=None,
-                                   max_price: float | None=None
+                                   max_price: float | None=None,
+                                   name: str | None=None,
+                                   sort: str | None=None
                                    ) -> list[MenuItem]:
-    print(f"DEBUG -> max_price: {max_price} (type: {type(max_price)})")
 
     stmt = select(MenuItemRecord).order_by(MenuItemRecord.id).where(MenuItemRecord.restaurant_id == restaurant_id)
 
@@ -26,6 +25,20 @@ def find_menu_items_for_restaurant(restaurant_id: int,
 
     if max_price is not None:
         stmt = stmt.where(MenuItemRecord.price <= Decimal(str(max_price)))
+
+    if name is not None:
+        stmt = stmt.where(MenuItemRecord.name.ilike(f"%{name}%")) # not case sensitve with ilike
+
+    if sort is not None:
+        if sort == "name_asc":
+            stmt = stmt.order_by(MenuItemRecord.name.asc())
+        elif sort == "name_desc":
+            stmt = stmt.order_by(MenuItemRecord.name.desc())
+        elif sort == "price_asc":
+            stmt = stmt.order_by(MenuItemRecord.price.asc())
+        elif sort == "price_desc":
+            stmt = stmt.order_by(MenuItemRecord.price.desc())
+
 
     records = db.session.scalars(stmt).all()
 

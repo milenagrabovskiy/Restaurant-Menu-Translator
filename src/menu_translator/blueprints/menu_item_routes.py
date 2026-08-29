@@ -36,11 +36,17 @@ def get_menu_items_by_restaurant(restaurant_id: int):
     lang = request.args.get("lang")
     min_price = request.args.get("min_price", type=float)
     max_price = request.args.get("max_price", type=float)
+    name = request.args.get("name")
+    sort = request.args.get("sort")
 
-    menu_items = menu_item_service.get_menu_items(restaurant_id,
-                                             category, lang,
-                                             min_price,
-                                             max_price)
+
+    menu_items = menu_item_service.get_menu_items(restaurant_id=restaurant_id,
+                                                  category=category,
+                                                  lang=lang,
+                                                  min_price=min_price,
+                                                  max_price=max_price,
+                                                  name=name,
+                                                  sort=sort)
 
     return list_response_wrapper(menu_items)
 

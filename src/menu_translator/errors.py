@@ -1,4 +1,7 @@
-class RestaurantManagementError(Exception):
+class DomainError(Exception):
+    """Generic domain error to inherit from"""
+
+class RestaurantManagementError(DomainError):
     """Base custom exception for the application. Handled by errorhandler()"""
 
     def __init__(self, code: str, status: int, detail: str | None):
@@ -8,5 +11,5 @@ class RestaurantManagementError(Exception):
         self.detail = detail
 
 
-class AWSError(Exception):
-    """Customer error for errors related to AWS"""
+class AWSError(DomainError):
+    """Custom error for errors related to AWS. Raised when Botocore or ClientError is thrown"""

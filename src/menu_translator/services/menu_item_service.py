@@ -1,5 +1,5 @@
 """Menu item service layer for orchestrating business logic."""
-from botocore.exceptions import BotoCoreError
+from botocore.exceptions import BotoCoreError, ClientError
 
 from menu_translator.ai.comprehend import detect_language
 from menu_translator.models.db_models.menu_item_orm import MenuItemRecord
@@ -11,28 +11,43 @@ from menu_translator.models.menu_item import (MenuItem, CreateMenuItemDto,
 from menu_translator.errors import RestaurantManagementError, AWSError
 
 MIN_CONFIDENCE_SCORE = 0.70
+VALID_SORT_QUERY = {"price_asc", "price_desc", "name_asc", "name_desc"}
 
 
 def get_menu_items(restaurant_id: int,
                    category: str | None,
                    lang: str | None,
                    min_price: float | None,
-                   max_price: float | None
+                   max_price: float | None,
+                   name: str | None,
+                   sort: str | None
                    ) -> list[dict|MenuItem]:
+
+    if not restaurant_service.find_restaurant_by_id(restaurant_id):
+        raise RestaurantManagementError(code="Restaurant_not_found",
+                                        status=404,
+                                        detail=f"Restaurant with id: {restaurant_id} does not exist")
 
     if category is not None:
         category = CategoryAdapter.validate_python(category)
 
 
     if min_price is not None and max_price is not None and min_price > max_price:
-        raise RestaurantManagementError("invalid_query_params",
-                                        422,
-                                        "min price must be lower than max price")
+        raise RestaurantManagementError(code="invalid_query_params",
+                                        status=422,
+                                        detail="min price must be lower than max price") # i should create better error class
+
+    if sort is not None and sort not in VALID_SORT_QUERY:
+        raise RestaurantManagementError(code="invalid_query_params",
+                                        status=422,
+                                        detail=f"sort must be one of these: {VALID_SORT_QUERY}")
 
     menu_items = menu_item_store.find_menu_items_for_restaurant(restaurant_id,
                                                                 category,
                                                                 min_price,
-                                                                max_price)
+                                                                max_price,
+                                                                name,
+                                                                sort)
 
     if lang is None:
         return menu_items
@@ -50,7 +65,7 @@ def get_menu_items(restaurant_id: int,
             name_response = translate(item.name, source_lang, lang)
             description_response = translate(item.description, source_lang, lang)
 
-        except BotoCoreError as e:
+        except (BotoCoreError, ClientError) as e:
             raise AWSError(code="translation_failed", status=502, detail="menu item translation failed") from e
 
         item_data["name"] = name_response["translated_text"]
@@ -81,8 +96,12 @@ def create_new_menu_item(restaurant_id: int, menu_item_data: dict) -> MenuItem:
     restaurant = restaurant_service.find_restaurant_by_id(restaurant_id)
 
     text = f"{create_dto.name} {create_dto.description}"
-
-    detected_lang, confidence_score = detect_language(text)
+    try:
+        detected_lang, confidence_score = detect_language(text)
+    except (BotoCoreError, ClientError) as e:
+        raise AWSError(code="language_detection_failed",
+                       status=502,
+                       detail="language detection not working") from e
 
     if detected_lang is None or confidence_score < MIN_CONFIDENCE_SCORE:
         detected_lang = restaurant.default_menu_language
@@ -103,7 +122,22 @@ def update_existing_menu_item(restaurant_id: int, menu_item_id: int, menu_item_d
 
     update_dto = UpdateMenuItemDto.model_validate(menu_item_data)
 
-    menu_item = menu_item_store.update_existing_menu_item(restaurant_id, menu_item_id, update_dto)
+    restaurant = restaurant_service.find_restaurant_by_id(restaurant_id)
+
+    text = f"{update_dto.name} {update_dto.description}"
+
+    try:
+        detected_lang, confidence_score = detect_language(text)
+    except (BotoCoreError, ClientError) as e:
+        raise AWSError(code="language_detection_failed", status=502, detail="language detection not working")
+
+    if detected_lang is None or confidence_score < MIN_CONFIDENCE_SCORE:
+        detected_lang = restaurant.default_menu_language
+
+    update_data = update_dto.model_dump()
+    update_data["detected_source_language"] = detected_lang
+
+    menu_item = menu_item_store.update_existing_menu_item(restaurant_id, menu_item_id, update_data)
 
     if menu_item is None:
         raise RestaurantManagementError(code="not_found", status=404, detail=f"Menu item with id: {menu_item_id} not found.")
