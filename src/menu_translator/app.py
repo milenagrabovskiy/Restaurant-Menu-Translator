@@ -10,7 +10,7 @@ from menu_translator.blueprints.health import health_bp
 from menu_translator.blueprints.menu_item_routes import menu_item_bp
 from menu_translator.blueprints.restaurant_routes import restaurants_bp
 from menu_translator.responses import error_response
-from menu_translator.errors import RestaurantManagementError
+from menu_translator.errors import RestaurantManagementError, AWSError
 from menu_translator.extensions import db
 
 import os
@@ -69,6 +69,9 @@ def create_app():
         detail_str = f"{field}:{first_error['msg']}"
         return error_response("validation_failed", 422, detail_str)
 
+    @app.errorhandler(AWSError)
+    def handle_aws_error(error: AWSError):
+        return error_response(error.code, error.status, error.detail)
 
     @app.errorhandler(404)
     def handle_not_found_error(error):
