@@ -77,7 +77,7 @@ def delete_menu_item(restaurant_id: int, menu_item_id: int):
     body = request.get_json() or {}
 
     menu_item_service.remove_menu_item(restaurant_id, menu_item_id, body)
-    return jsonify(status="deleted"), 204
+    return "", 204
 
 
 """Upload Menu Photo for Bulk Import:

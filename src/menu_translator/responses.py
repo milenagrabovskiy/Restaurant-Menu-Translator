@@ -13,4 +13,3 @@ def list_response_wrapper(restaurants: list[Restaurant]):
 #
 def error_response(code: str, status: int, detail: str | None):
     return jsonify(error=code, detail=detail, request_id=g.request_id), status
-    # return jsonify(error=code, detail=detail, request_id=g.request_id), status

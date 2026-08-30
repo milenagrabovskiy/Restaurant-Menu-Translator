@@ -36,4 +36,4 @@ def delete_restaurant(restaurant_id):
     body = request.get_json()
     restaurant_service.delete_restaurant(restaurant_id, body)
     # return "", 204 means no content(no json)
-    return jsonify({"message": "Restaurant successfully deleted"})
+    return "", 204
