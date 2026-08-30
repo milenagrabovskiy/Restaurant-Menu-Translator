@@ -15,6 +15,7 @@ ALLOWED_IMAGE_TYPES = {"jpg", "jpeg", "png"}
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
+
 def read_upload(file: FileStorage | None,
                 allowed_extensions: set[str],
                 max_bytes: int) -> tuple[bytes, str]:
@@ -29,24 +30,23 @@ def read_upload(file: FileStorage | None,
 
     content = file.read()
     if len(content) > max_bytes:
-        raise RestaurantManagementError("file_too_large", 413, f"file exceeds {MAX_FILE_SIZE} bytes.")
+        raise RestaurantManagementError("file_too_large", 413, f"file exceeds {max_bytes} bytes.")
 
     if not content:
-        raise RestaurantManagementError("validation_failed", 422, "empty file uploaded")
+        raise RestaurantManagementError("empty_file", 422, "empty file uploaded")
 
 
     return content, file.filename
 
 
 
-def import_menu_image(restaurant_id: int,
-                      file: FileStorage | None) -> dict:
+def import_menu_image(restaurant_id: int, file: FileStorage | None) -> dict:
 
     restaurant_service.find_restaurant_by_id(restaurant_id)
 
     content, filename = read_upload(file, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE)
 
-    extension = filename.rsplit(".", 1)[1].lower()
+    extension = filename.rsplit(".", 1)[-1].lower()
     if extension == "png":
         content_type = "image/png"
     else:
@@ -71,19 +71,20 @@ def import_menu_image(restaurant_id: int,
     try:
         lines = textract.extract_lines(AWS_BUCKET_NAME, object_key)
     except (BotoCoreError, ClientError):
-
-
+        return {"status": "text_extraction_failed",
+                "restaurant_id": restaurant_id,
+                "object_key": object_key,
+                "candidates": []
+                }
 
     if not lines:
-        return {
-            "status": "no_text_found",
-            "restaurant_id": restaurant_id,
-            "object_key": object_key,
-            "candidates": []
-        }
+        return {"status": "no_text_found",
+                "restaurant_id": restaurant_id,
+                "object_key": object_key,
+                "candidates": []
+                }
 
     candidates = parse_menu_lines(lines)
-
 
     return {
         "status": "success",
@@ -95,23 +96,18 @@ def import_menu_image(restaurant_id: int,
 
 def parse_menu_lines(lines: list[str]) -> list[dict]:
     candidates = []
-
     for line in lines:
-
         line = line.strip()
-
         if not line:
             continue
 
         candidate = parse_menu_line(line)
-
         candidates.append(candidate)
 
     return candidates
 
 
 def parse_menu_line(line: str) -> dict:
-
     price_pattern = r"^(.*?)[\s.]*\$?(\d+(?:\.\d{1,2})?)$"
 
     match = re.match(price_pattern, line)
@@ -130,9 +126,8 @@ def parse_menu_line(line: str) -> dict:
                 "category": None,
                 "parsed": True
             }
-
     return {
-        "raw_text": line,
+        "raw_text": line, # only raw text preserved, everything else staff must look at
         "name": None,
         "description": None,
         "price": None,
