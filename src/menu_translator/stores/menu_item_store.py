@@ -65,7 +65,7 @@ def create_new_menu_item(record: MenuItemRecord) -> MenuItem:
     return MenuItem.model_validate(record)
 
 
-def update_existing_menu_item(restaurant_id: int, menu_item_id: int, update_dto: UpdateMenuItemDto) -> MenuItem | None:
+def update_existing_menu_item(restaurant_id: int, menu_item_id: int, update_data: dict) -> MenuItem | None:
 
     record = db.session.get(MenuItemRecord, menu_item_id)
     if record is None:
@@ -74,7 +74,7 @@ def update_existing_menu_item(restaurant_id: int, menu_item_id: int, update_dto:
     if record.restaurant_id != restaurant_id:
         return None
 
-    for key, value in update_dto.model_dump().items():
+    for key, value in update_data.items():
         setattr(record, key, value)
 
     db.session.commit()

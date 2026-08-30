@@ -1,17 +1,6 @@
 import pytest
 
 
-@pytest.fixture
-def restaurant_payload():
-
-    return {
-        "name": "Test Restaurant",
-        "cuisine_type": "American",
-        "default_menu_language": "en"
-    }
-
-
-@pytest.mark.tcid1
 def test_create_restaurant(app, restaurant_payload):
     client = app.test_client()
 
@@ -37,7 +26,6 @@ def test_create_restaurant(app, restaurant_payload):
                                                                  f"Expected: {restaurant_payload['default_menu_language']},"
                                                                  f"Actual: {json_response["default_menu_language"]}")
 
-@pytest.mark.tcid2
 def test_get_restaurants(app, restaurant):
 
     client = app.test_client()
@@ -52,7 +40,6 @@ def test_get_restaurants(app, restaurant):
     assert json_response[0]["name"] == restaurant["name"]
 
 
-@pytest.mark.tcid3
 def test_update_restaurant(app, restaurant):
 
     client = app.test_client()
@@ -81,7 +68,6 @@ def test_update_restaurant(app, restaurant):
                                                                  f"Expected: {payload['default_menu_language']},"
                                                                  f"Actual: {json_response["default_menu_language"]}")
 
-@pytest.mark.tcid4
 def test_delete_restaurant(app, restaurant):
 
     client = app.test_client()

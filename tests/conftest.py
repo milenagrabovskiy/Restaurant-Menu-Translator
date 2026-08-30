@@ -32,11 +32,19 @@ def restaurant(app, restaurant_payload):
 
     client = app.test_client()
 
-    response = client.post(
-        "/api/v1/restaurants",
-        json=restaurant_payload
-    )
+    response = client.post("/api/v1/restaurants", json=restaurant_payload)
 
     assert response.status_code == 201
 
     return response.get_json()
+
+
+@pytest.fixture
+def restaurant_payload():
+
+    return {
+        "name": "Test Restaurant",
+        "cuisine_type": "American",
+        "default_menu_language": "en"
+        }
+
