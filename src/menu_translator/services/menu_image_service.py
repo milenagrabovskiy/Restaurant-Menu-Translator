@@ -1,4 +1,6 @@
-"""Service module for importing menu images and extracting menu item candidates"""
+"""Service module for importing menu images and extracting menu item candidates. Handles:
+    validing the file, uploading file to s3 bucket, reading text from image using textract,
+    and returns candidates for review"""
 import re
 import uuid
 
@@ -11,7 +13,7 @@ from menu_translator.services import restaurant_service
 from menu_translator.ai import s3, textract
 
 
-ALLOWED_IMAGE_TYPES = {"jpg", "jpeg", "png"}
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png"}
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
@@ -19,6 +21,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 def read_upload(file: FileStorage | None,
                 allowed_extensions: set[str],
                 max_bytes: int) -> tuple[bytes, str]:
+    """validate the uploaded image and return its bytes and filename"""
 
     if file is None or not file.filename:
         raise RestaurantManagementError("validation_failed", 422, "no file uploaded")
@@ -41,10 +44,11 @@ def read_upload(file: FileStorage | None,
 
 
 def import_menu_image(restaurant_id: int, file: FileStorage | None) -> dict:
-
+    """upload menu image and return its extracted menu item candidates.
+        if line extraction fails, return empty candidates"""
     restaurant_service.find_restaurant_by_id(restaurant_id)
 
-    content, filename = read_upload(file, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE)
+    content, filename = read_upload(file, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE) #validates the image
 
     extension = filename.rsplit(".", 1)[-1].lower()
     if extension == "png":
@@ -74,7 +78,7 @@ def import_menu_image(restaurant_id: int, file: FileStorage | None) -> dict:
         return {"status": "text_extraction_failed",
                 "restaurant_id": restaurant_id,
                 "object_key": object_key,
-                "candidates": []
+                "candidates": [] # reqs say return empty candidates rather than raise err
                 }
 
     if not lines:
@@ -95,6 +99,7 @@ def import_menu_image(restaurant_id: int, file: FileStorage | None) -> dict:
 
 
 def parse_menu_lines(lines: list[str]) -> list[dict]:
+    """parse one extracted line into a menu item candidate"""
     candidates = []
     for line in lines:
         line = line.strip()
@@ -111,7 +116,6 @@ def parse_menu_line(line: str) -> dict:
     price_pattern = r"^(.*?)[\s.]*\$?(\d+(?:\.\d{1,2})?)$"
 
     match = re.match(price_pattern, line)
-
     if match:
 
         name = match.group(1).strip(" .")
@@ -127,7 +131,7 @@ def parse_menu_line(line: str) -> dict:
                 "parsed": True
             }
     return {
-        "raw_text": line, # only raw text preserved, everything else staff must look at
+        "raw_text": line, # only raw text preserved, everything else staff should review!!
         "name": None,
         "description": None,
         "price": None,
