@@ -1,3 +1,4 @@
+from http.client import responses
 from unittest.mock import patch
 
 import pytest
@@ -156,3 +157,89 @@ def test_delete_menu_items(app, restaurant, menu_item):
 
     assert response.status_code == 204,  f"Unexpected status code. Expected 204, Actual: {response.status_code}"
 
+
+
+@pytest.mark.parametrize("category",
+                         ["entree",
+                          "dessert",
+                          "appetizer",
+                          "beverage"
+                         ])
+
+def test_filter_menu_items_by_category(app, restaurant, category):
+
+    client = app.test_client()
+    restaurant_id = restaurant["id"]
+
+    payload = {
+        "name": "Test Item",
+        "description": "Test description",
+        "price": 10.99,
+        "category": category
+    }
+
+    with patch(
+        "menu_translator.services.menu_item_service.detect_language",
+        return_value=("en", 0.99)
+        ):
+        create_response = client.post(f"/api/v1/restaurants/{restaurant_id}/menu_items", json=payload)
+
+        assert create_response.status_code == 201, (
+            f"Failed to create item: {create_response.get_json()}"
+        )
+
+    response = client.get(f"/api/v1/restaurants/{restaurant_id}/menu_items?category={category}")
+
+    json_response = response.get_json()
+
+    assert response.status_code == 200, f"Unexpected status code. Expected 200, Actual: {response.status_code}"
+
+    assert len(json_response) > 0, f"Amount of menu items should be > 0, Actual: {len(json_response)}"
+
+    assert json_response[0]["category"] == category, (f"Unexpected category"
+                                                      f"Expected: {payload['category']},"
+                                                      f"Actual: {json_response['category']}")
+
+
+@pytest.mark.parametrize("sort",
+                         ["price_asc",
+                          "price_desc",
+                          "name_asc",
+                          "name_desc"
+                         ])
+def test_sort_menu_items(app, restaurant, menu_item, sort):
+    """verifies that sort is a valid query param"""
+    client = app.test_client()
+    restaurant_id = restaurant["id"]
+    # first item comes from fixture
+    second_menu_item_payload = {
+        "name": "chocolate cake",
+        "description": "yummy cake",
+        "price": 5.99,
+        "category": "dessert"
+    }
+
+    with patch(
+            "menu_translator.services.menu_item_service.detect_language",
+            return_value=("en", 0.99)
+            ):
+        response = client.post(f"/api/v1/restaurants/{restaurant_id}/menu_items", json=second_menu_item_payload)
+
+    assert response.status_code == 201, f"Unexpected status code. Expected 201, Actual: {response.status_code}"
+
+    response = client.get(f"/api/v1/restaurants/{restaurant_id}/menu_items?sort={sort}")
+    assert response.status_code == 200, f"Unexpected status code. Expected 200, Actual: {response.status_code}"
+
+    json_response = response.get_json()
+
+    if sort == "price_asc":
+        assert json_response[0]["price"] <= json_response[1]["price"]
+    elif sort == "price_desc":
+        assert json_response[0]["price"] >= json_response[1]["price"]
+    elif sort == "name_asc":
+        assert json_response[0]["name"].lower() <= json_response[1]["name"].lower()
+    elif sort == "name_desc":
+        assert json_response[0]["name"].lower() >= json_response[1]["name"].lower()
+
+
+# also make test for ?lang=<code>

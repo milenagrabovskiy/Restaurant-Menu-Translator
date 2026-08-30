@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import select, text
+from sqlalchemy import select, text, func
 
 from menu_translator.models.db_models.menu_item_orm import MenuItemRecord
 from menu_translator.models.menu_item import MenuItem, UpdateMenuItemDto, CreateMenuItemDto
@@ -15,7 +15,7 @@ def find_menu_items_for_restaurant(restaurant_id: int,
                                    sort: str | None=None
                                    ) -> list[MenuItem]:
 
-    stmt = select(MenuItemRecord).order_by(MenuItemRecord.id).where(MenuItemRecord.restaurant_id == restaurant_id)
+    stmt = select(MenuItemRecord).where(MenuItemRecord.restaurant_id == restaurant_id)
 
     if category is not None:
         stmt = stmt.where(MenuItemRecord.category == category)
@@ -31,9 +31,9 @@ def find_menu_items_for_restaurant(restaurant_id: int,
 
     if sort is not None:
         if sort == "name_asc":
-            stmt = stmt.order_by(MenuItemRecord.name.asc())
+            stmt = stmt.order_by(func.lower(MenuItemRecord.name).asc())
         elif sort == "name_desc":
-            stmt = stmt.order_by(MenuItemRecord.name.desc())
+            stmt = stmt.order_by(func.lower(MenuItemRecord.name).desc())
         elif sort == "price_asc":
             stmt = stmt.order_by(MenuItemRecord.price.asc())
         elif sort == "price_desc":
