@@ -1,14 +1,16 @@
-from flask import Flask
+import time
+import uuid
+import structlog
+
+from flask import Flask, Response, g, request
 from flask_migrate import Migrate
 from pydantic import ValidationError
 
 from menu_translator.blueprints.health import health_bp
 from menu_translator.blueprints.menu_item_routes import menu_item_bp
 from menu_translator.blueprints.restaurant_routes import restaurants_bp
-from menu_translator.models.db_models.menu_item_orm import MenuItemRecord
-from menu_translator.models.db_models.restaurant_orm import RestaurantRecord
-from menu_translator.services.responses import RestaurantManagementError, AWSError, error_response
-
+from menu_translator.responses import error_response
+from menu_translator.errors import RestaurantManagementError, AWSError
 from menu_translator.extensions import db
 
 import os
@@ -21,7 +23,27 @@ migrate = Migrate()
 
 def create_app():
 
+    structlog.configure(processors=[structlog.processors.JSONRenderer()])
+
+    logger = structlog.get_logger()
+
     app = Flask(__name__)
+
+    @app.before_request
+    def before_request():
+        g.request_id = str(uuid.uuid4())
+        g.start_time = time.perf_counter()
+
+    @app.after_request
+    def after_request(response: Response):
+        duration_ms = (time.perf_counter() - g.start_time) * 1000
+        logger.info("completed_request", method=request.method,
+                    path=request.path,
+                    status_code=response.status_code,
+                    duration=round(duration_ms, 3),
+                    request_id=g.request_id)
+        return response
+
 
     # connect to db
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
@@ -47,9 +69,12 @@ def create_app():
         detail_str = f"{field}:{first_error['msg']}"
         return error_response("validation_failed", 422, detail_str)
 
+    @app.errorhandler(AWSError)
+    def handle_aws_error(error: AWSError):
+        return error_response(error.code, error.status, error.detail)
 
     @app.errorhandler(404)
-    def handle_not_found_error():
+    def handle_not_found_error(error):
         return error_response(code="resource_not_found", status=404, detail="The requested resource does not exist")
 
 
