@@ -61,7 +61,7 @@ def get_menu_items(restaurant_id: int,
             translated_results.append(item)
             continue
 
-        try:
+        try: # 2 calls
             name_response = translate(item.name, source_lang, lang)
             description_response = translate(item.description, source_lang, lang)
 

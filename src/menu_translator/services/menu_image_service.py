@@ -29,7 +29,7 @@ def read_upload(file: FileStorage | None,
     extension = file.filename.rsplit(".", 1)[-1].lower()
 
     if extension not in allowed_extensions:
-        raise RestaurantManagementError("unallowed_file_type", 422, f"{list(allowed_extensions)}")
+        raise RestaurantManagementError("unallowed_file_type", 415, f"{list(allowed_extensions)}")
 
     content = file.read()
     if len(content) > max_bytes:
