@@ -6,13 +6,13 @@ from menu_translator.extensions import db
 
 
 
+TEST_CONFIG = {"TESTING": True, "SQLALCHEMY_DATABASE_URI":
+                                        "postgresql://postgres:root@localhost:5432/restaurant_menu_test_db"}
+
+
 @pytest.fixture
 def app():
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = (
-        "postgresql://user:password@localhost/restaurant_menu_test"
-    )
+    app = create_app(TEST_CONFIG)
 
     with app.app_context():
         db.create_all()
