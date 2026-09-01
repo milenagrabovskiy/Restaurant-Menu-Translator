@@ -1,4 +1,3 @@
-from http.client import responses
 from unittest.mock import patch
 
 import pytest
@@ -99,7 +98,7 @@ def test_create_menu_item(app, restaurant):
                                                                f"Actual: {json_response['category']}")
 
     assert json_response["detected_source_language"] == "en", (f"Unexpected detected_source_language"
-                                                               f"Expected: {payload['detected_source_language']},"
+                                                               f"Expected: en,"
                                                                f"Actual: {json_response['detected_source_language']}")
 
 
@@ -109,8 +108,6 @@ def test_update_menu_item(app, restaurant, menu_item):
 
     restaurant_id = restaurant["id"]
     menu_item_id = menu_item["id"]
-
-    response = client.put(f"api/v1/restaurants/{restaurant_id}/menu_items/{menu_item_id}")
 
     payload = {
         "name": "Updated Burger",
@@ -242,4 +239,48 @@ def test_sort_menu_items(app, restaurant, menu_item, sort):
         assert json_response[0]["name"].lower() >= json_response[1]["name"].lower()
 
 
-# also make test for ?lang=<code>
+
+def test_get_menu_items_with_translation(app, restaurant):
+    """using mocked comprehend and translate clients to assert language detected and translation workflow works """
+    client = app.test_client()
+
+    restaurant_id = restaurant["id"]
+
+    # First create an English menu item
+    payload = {"name": "Cheeseburger",
+                "description": "Burger with cheese",
+                "price": 12.99,
+                "category": "entree"
+                }
+
+    with patch("menu_translator.services.menu_item_service.detect_language", return_value=("en", 0.99)):
+        create_response = client.post(f"/api/v1/restaurants/{restaurant_id}/menu_items", json=payload)
+
+    assert create_response.status_code == 201, f"Unexpected status code. Expected 201, Actual: {create_response.status_code}"
+
+
+
+    with patch("menu_translator.services.menu_item_service.translate") as mock_translate:
+
+        mock_translate.side_effect = [{"translated_text": "hamburguesa",
+                                        "source_language": "en",
+                                        "target_language": "es"
+                                        },
+                                       {"translated_text": "hamburguesa con queso",
+                                        "source_language": "en",
+                                        "target_language": "es"
+                                        }
+                                      ]
+
+        response = client.get(f"/api/v1/restaurants/{restaurant_id}/menu_items?lang=es")
+
+    assert response.status_code == 200, f"Unexpected status code. Expected 200, Actual: {response.status_code}"
+
+    json_response = response.get_json()
+
+    assert json_response[0]["name"] == "hamburguesa", (f"Error. Expected name: 'hamburguesa' "
+                                                       f"Actual name: {json_response[0]['name']}")
+
+    assert json_response[0]["description"] == "hamburguesa con queso", (f"Error. Expected description: 'hamburguesa con queso' "
+                                                                        f"Actual description: {json_response[0]['description']}")
+
