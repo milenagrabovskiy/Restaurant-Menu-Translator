@@ -1,3 +1,5 @@
+"""pydantic models and dto definitions for menu items"""
+
 from typing import Literal
 from pydantic import BaseModel, Field, ConfigDict, TypeAdapter
 
@@ -8,7 +10,7 @@ Category = Literal["appetizer", "entree", "dessert", "beverage"]  # should be wr
 CategoryAdapter = TypeAdapter(Category)
 
 class MenuItem(BaseModel):
-
+    """represents a menu item returned by the application"""
     id: int
     restaurant_id: int
     name: str = Field(min_length=3)
@@ -22,6 +24,7 @@ class MenuItem(BaseModel):
 
 
 class CreateMenuItemDto(BaseModel):
+    """validates data used to create a menu item"""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -33,6 +36,7 @@ class CreateMenuItemDto(BaseModel):
 
 
 class UpdateMenuItemDto(BaseModel):
+    """validates data used to update a menu item"""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -44,6 +48,7 @@ class UpdateMenuItemDto(BaseModel):
 
 
 class DeleteMenuItemDto(BaseModel):
+    """validates menu item deletion confirmation data"""
 
     model_config = ConfigDict(extra="forbid")
 

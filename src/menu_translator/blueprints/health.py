@@ -1,4 +1,4 @@
-
+"""Blueprint to check the health of Flask and database"""
 from flask import Blueprint, jsonify
 from menu_translator.services import health_service
 from menu_translator.responses import error_response

@@ -1,4 +1,4 @@
-
+"""restaurant store layer for database operations"""
 from sqlalchemy import select
 
 from menu_translator.models.db_models.restaurant_orm import RestaurantRecord
@@ -6,6 +6,7 @@ from menu_translator.models.restaurant import Restaurant, UpdateRestaurantDto, C
 from menu_translator.extensions import db
 
 def get_all_restaurants() -> list[Restaurant]:
+    """returns all restaurants from the database"""
     stmt = select(RestaurantRecord).order_by(RestaurantRecord.id)
     records = db.session.scalars(stmt).all()
 
@@ -14,6 +15,7 @@ def get_all_restaurants() -> list[Restaurant]:
 
 
 def find_restaurant_by_id(restaurant_id: int) -> Restaurant | None:
+    """returns a restaurant by its id"""
     record = db.session.get(RestaurantRecord, restaurant_id)
 
     return Restaurant.model_validate(record) if record else None
@@ -21,6 +23,8 @@ def find_restaurant_by_id(restaurant_id: int) -> Restaurant | None:
 
 
 def find_restaurant_by_name(name: str) -> Restaurant | None:
+    """returns a restaurant by its name"""
+
     stmt = select(RestaurantRecord).where(RestaurantRecord.name == name)
     record = db.session.scalar(stmt)
 
@@ -29,6 +33,7 @@ def find_restaurant_by_name(name: str) -> Restaurant | None:
 
 
 def delete_restaurant(restaurant_id: int) -> bool:
+    """deletes a restaurant by its id"""
     record = db.session.get(RestaurantRecord, restaurant_id)
     if record is not None:
         db.session.delete(record)
@@ -39,15 +44,12 @@ def delete_restaurant(restaurant_id: int) -> bool:
 
 
 def update_existing_restaurant(restaurant_id: int, restaurant_data: dict) -> Restaurant | None:
+    """updates an existing restaurant"""
     record = db.session.get(RestaurantRecord, restaurant_id)
     if record is None:
         return None
 
     updated_restaurant = UpdateRestaurantDto.model_validate(restaurant_data)
-
-    # record.name = updated_restaurant.name
-    # record.cuisine_type = updated_restaurant.cuisine_type
-    # record.default_menu_language = updated_restaurant.default_menu_language
 
     for key, value in updated_restaurant.model_dump(exclude_unset=True).items():
         setattr(record, key, value)
@@ -58,6 +60,7 @@ def update_existing_restaurant(restaurant_id: int, restaurant_data: dict) -> Res
 
 
 def create_new_restaurant(restaurant_data: dict) -> Restaurant:
+    """creates and saves a new restaurant"""
     new_restaurant = CreateRestaurantDto.model_validate(restaurant_data)
     record = RestaurantRecord(**new_restaurant.model_dump())
     db.session.add(record)
@@ -68,7 +71,7 @@ def create_new_restaurant(restaurant_data: dict) -> Restaurant:
 
 
 def restaurant_exists(name: str, cuisine_type: str, default_menu_language: str) -> bool:
-
+    """checks if a restaurant with the given data already exists"""
     stmt = select(RestaurantRecord.id).where(
         RestaurantRecord.name==name,
         RestaurantRecord.cuisine_type == cuisine_type,

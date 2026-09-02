@@ -1,3 +1,4 @@
+"""ORM for menu item"""
 from sqlalchemy import ForeignKey, String, Text, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from decimal import Decimal
@@ -6,7 +7,7 @@ from decimal import Decimal
 from menu_translator.extensions import db
 
 class MenuItemRecord(db.Model):
-
+    """ORM that represents a menu item in the DB"""
     __tablename__ = "menu_item"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

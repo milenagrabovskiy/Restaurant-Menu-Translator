@@ -131,7 +131,7 @@ def parse_menu_line(line: str) -> dict:
                 "parsed": True
             }
     return {
-        "raw_text": line, # only raw text preserved, everything else staff should review!!
+        "raw_text": line,
         "name": None,
         "description": None,
         "price": None,

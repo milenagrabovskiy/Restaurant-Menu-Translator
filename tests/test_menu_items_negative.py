@@ -1,11 +1,11 @@
 """test module for menu items endpoints to ensure failures occur when they are expected"""
-import pytest
+from flask import Flask
 
-def test_create_menu_item_negative_price(app, restaurant):
-
+def test_create_menu_item_negative_price(app: Flask, restaurant: dict) -> None:
+    """asserting that invalid price in payload does not result in new menu item being created"""
     client = app.test_client()
 
-    restaurant_id = restaurant["data"]["id"]
+    restaurant_id = restaurant["id"]
 
     payload = {
         "name": "Burger",
@@ -22,11 +22,11 @@ def test_create_menu_item_negative_price(app, restaurant):
     assert response.status_code == 422, f"Unexpected status code. Expected: 422 Actual: {response.status_code}"
 
 
-def test_create_menu_item_invalid_category(app, restaurant):
-
+def test_create_menu_item_invalid_category(app: Flask, restaurant: dict) -> None:
+    """asserting that invalid category in payload does not result in new menu item being created"""
     client = app.test_client()
 
-    restaurant_id = restaurant["data"]["id"]
+    restaurant_id = restaurant["id"]
 
     payload = {"name": "Burger",
                 "description": "Burger with cheese",

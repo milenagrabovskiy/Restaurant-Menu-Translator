@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+"""module for testing application and database health"""
 from sqlalchemy.exc import SQLAlchemyError
 
 from menu_translator.extensions import db
@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 
 def is_live() -> bool:
+    """Checks if Flask is running"""
     return True
 
 

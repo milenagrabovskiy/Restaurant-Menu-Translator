@@ -6,13 +6,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: restaurant_menu_db
+      POSTGRES_DB: restaurant_menu_docker_db
 
     volumes:
       - db-data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d restaurant_menu_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d restaurant_menu_docker_db"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -25,10 +25,14 @@ services:
       - .env
 
     environment:
-      DATABASE_URL: postgresql://postgres:root@db:5432/restaurant_menu_db
+      DATABASE_URL: postgresql+psycopg://postgres:root@db:5432/restaurant_menu_docker_db
+      FLASK_APP: menu_translator.app:create_app
+
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
 
     ports:
-      - "5000:5000"
+      - "5003:5000"
 
     depends_on:
       db:

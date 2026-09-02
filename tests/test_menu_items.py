@@ -1,11 +1,14 @@
+"""Test module for testing menu items api endpoints"""
 from unittest.mock import patch
+from flask import Flask
+from typing import Any
 
 import pytest
 
 
 @pytest.fixture
-def menu_item(app, restaurant):
-
+def menu_item(app: Flask, restaurant:dict[str, Any]) -> None:
+    """fixture for creating a menu item"""
     client = app.test_client()
 
     payload = {
@@ -25,8 +28,8 @@ def menu_item(app, restaurant):
         return response.get_json()
 
 
-def test_get_all_menu_items(app, restaurant, menu_item):
-
+def test_get_all_menu_items(app: Flask, restaurant: dict[str, Any], menu_item: dict[str, Any]) -> None:
+    """asserting get menu items endpoint works"""
     client = app.test_client()
 
     restaurant_id = restaurant["id"]
@@ -55,8 +58,8 @@ def test_get_all_menu_items(app, restaurant, menu_item):
                                                             f"Actual: {json_response[0]['category']}")
 
 
-def test_create_menu_item(app, restaurant):
-
+def test_create_menu_item(app: Flask, restaurant: dict[str, Any]) -> None:
+    """asserting create menu item endpoint works"""
     client = app.test_client()
 
     restaurant_id = restaurant["id"]
@@ -102,8 +105,8 @@ def test_create_menu_item(app, restaurant):
                                                                f"Actual: {json_response['detected_source_language']}")
 
 
-def test_update_menu_item(app, restaurant, menu_item):
-
+def test_update_menu_item(app: Flask, restaurant: dict[str, Any], menu_item: dict[str, Any]) -> None:
+    """asserting update menu item endpoint works"""
     client = app.test_client()
 
     restaurant_id = restaurant["id"]
@@ -142,8 +145,8 @@ def test_update_menu_item(app, restaurant, menu_item):
                                                                f"Actual: {json_response['category']}")
 
 
-def test_delete_menu_items(app, restaurant, menu_item):
-
+def test_delete_menu_items(app: Flask, restaurant: dict, menu_item: dict) -> None:
+    """asserting delete menu item endpoint works and returns no content"""
     client = app.test_client()
 
     restaurant_id = restaurant["id"]
@@ -163,8 +166,8 @@ def test_delete_menu_items(app, restaurant, menu_item):
                           "beverage"
                          ])
 
-def test_filter_menu_items_by_category(app, restaurant, category):
-
+def test_filter_menu_items_by_category(app: Flask, restaurant: dict, category: str) -> None:
+    """asserting get menu items with category query param endpoint works"""
     client = app.test_client()
     restaurant_id = restaurant["id"]
 
@@ -204,7 +207,7 @@ def test_filter_menu_items_by_category(app, restaurant, category):
                           "name_asc",
                           "name_desc"
                          ])
-def test_sort_menu_items(app, restaurant, menu_item, sort):
+def test_sort_menu_items(app: Flask, restaurant: dict, menu_item: dict, sort: str) -> None:
     """verifies that sort is a valid query param"""
     client = app.test_client()
     restaurant_id = restaurant["id"]
@@ -240,7 +243,7 @@ def test_sort_menu_items(app, restaurant, menu_item, sort):
 
 
 
-def test_get_menu_items_with_translation(app, restaurant):
+def test_get_menu_items_with_translation(app: Flask, restaurant: dict) -> None:
     """using mocked comprehend and translate clients to assert language detected and translation workflow works """
     client = app.test_client()
 

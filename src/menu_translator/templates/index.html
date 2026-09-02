@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Restaurant Menu Translator</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #dddddd;
+            border-radius: 6px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            width: 250px;
+        }
+
+        textarea {
+            padding: 8px;
+            width: 300px;
+            height: 60px;
+        }
+
+        button {
+            padding: 8px 14px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #eeeeee;
+        }
+
+        .message {
+            background-color: #eef6ff;
+            border: 1px solid #b5d6f6;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .danger {
+            background-color: #fff0f0;
+        }
+
+        .inline-form {
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .health-links a {
+            margin-right: 20px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>Restaurant Menu Translator</h1>
+
+    <p>
+        Restaurant and menu management with AWS language detection,
+        translation and menu image extraction.
+    </p>
+
+
+    {% if message %}
+
+        <div class="message">
+            {{ message }}
+        </div>
+
+    {% endif %}
+
+
+    <!-- HEALTH -->
+
+    <div class="card">
+
+        <h2>Application Health</h2>
+
+        <div class="health-links">
+
+            <a href="/health/live" target="_blank">
+                Check Liveness
+            </a>
+
+            <a href="/health/ready" target="_blank">
+                Check Readiness
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- CREATE RESTAURANT -->
+
+    <div class="card">
+
+        <h2>Create Restaurant</h2>
+
+        <form
+            action="/ui/restaurants/create"
+            method="POST"
+        >
+
+            <label>Name</label>
+
+            <input
+                type="text"
+                name="name"
+                required
+            >
+
+
+            <label>Cuisine Type</label>
+
+            <input
+                type="text"
+                name="cuisine_type"
+                required
+            >
+
+
+            <label>Default Menu Language</label>
+
+            <input
+                type="text"
+                name="default_menu_language"
+                placeholder="en"
+                required
+            >
+
+            <br>
+
+            <button type="submit">
+                Create Restaurant
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- RESTAURANTS -->
+
+    <div class="card">
+
+        <h2>Restaurants</h2>
+
+        {% if restaurants %}
+
+            <table>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Cuisine</th>
+                    <th>Default Language</th>
+                    <th>Menu Items</th>
+                </tr>
+
+                {% for restaurant in restaurants %}
+
+                    <tr>
+
+                        <td>{{ restaurant.id }}</td>
+
+                        <td>{{ restaurant.name }}</td>
+
+                        <td>{{ restaurant.cuisine_type }}</td>
+
+                        <td>
+                            {{ restaurant.default_menu_language }}
+                        </td>
+
+                        <td>
+                            {{ restaurant.menu_item_count }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </table>
+
+        {% else %}
+
+            <p>No restaurants found.</p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- UPDATE RESTAURANT -->
+
+    <div class="card">
+
+        <h2>Update Restaurant</h2>
+
+        <form
+            action="/ui/restaurants/update"
+            method="POST"
+        >
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                required
+            >
+
+
+            <label>Name</label>
+
+            <input
+                type="text"
+                name="name"
+                required
+            >
+
+
+            <label>Cuisine Type</label>
+
+            <input
+                type="text"
+                name="cuisine_type"
+                required
+            >
+
+
+            <label>Default Menu Language</label>
+
+            <input
+                type="text"
+                name="default_menu_language"
+                required
+            >
+
+            <br>
+
+            <button type="submit">
+                Update Restaurant
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- DELETE RESTAURANT -->
+
+    <div class="card danger">
+
+        <h2>Delete Restaurant</h2>
+
+        <form
+            action="/ui/restaurants/delete"
+            method="POST"
+        >
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                required
+            >
+
+            <br>
+
+            <button type="submit">
+                Delete Restaurant
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- VIEW / TRANSLATE MENU -->
+
+    <div class="card">
+
+        <h2>View / Translate Menu</h2>
+
+        <form method="GET" action="/">
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                value="{{ selected_restaurant_id or '' }}"
+                required
+            >
+
+
+            <label>Language</label>
+
+            <select name="language">
+
+                <option value="">
+                    Original
+                </option>
+
+                {% for language in languages %}
+
+                    <option
+                        value="{{ language.LanguageCode }}"
+                    >
+                        {{ language.LanguageName }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+
+            <label>Category</label>
+
+            <select name="category">
+
+                <option value="">
+                    All Categories
+                </option>
+
+                <option value="appetizer">
+                    Appetizer
+                </option>
+
+                <option value="entree">
+                    Entree
+                </option>
+
+                <option value="dessert">
+                    Dessert
+                </option>
+
+                <option value="beverage">
+                    Beverage
+                </option>
+
+            </select>
+
+
+            <label>Sort</label>
+
+            <select name="sort">
+
+                <option value="">
+                    No Sorting
+                </option>
+
+                <option value="name_asc">
+                    Name Ascending
+                </option>
+
+                <option value="name_desc">
+                    Name Descending
+                </option>
+
+                <option value="price_asc">
+                    Price Ascending
+                </option>
+
+                <option value="price_desc">
+                    Price Descending
+                </option>
+
+            </select>
+
+            <br>
+
+            <button type="submit">
+                Load Menu
+            </button>
+
+        </form>
+
+
+        {% if menu_items is not none %}
+
+            <h3>Menu</h3>
+
+
+            {% if menu_items %}
+
+                <table>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Category</th>
+                        <th>Source Language</th>
+                    </tr>
+
+                    {% for item in menu_items %}
+
+                        <tr>
+
+                            <td>{{ item.id }}</td>
+
+                            <td>{{ item.name }}</td>
+
+                            <td>{{ item.description }}</td>
+
+                            <td>
+                                ${{ "%.2f"|format(item.price) }}
+                            </td>
+
+                            <td>{{ item.category }}</td>
+
+                            <td>
+                                {{ item.detected_source_language }}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </table>
+
+            {% else %}
+
+                <p>No menu items found.</p>
+
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- CREATE MENU ITEM -->
+
+    <div class="card">
+
+        <h2>Add Menu Item</h2>
+
+        <form
+            action="/ui/menu-items/create"
+            method="POST"
+        >
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                required
+            >
+
+
+            <label>Name</label>
+
+            <input
+                type="text"
+                name="name"
+                required
+            >
+
+
+            <label>Description</label>
+
+            <textarea
+                name="description"
+                required
+            ></textarea>
+
+
+            <label>Price</label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="price"
+                required
+            >
+
+
+            <label>Category</label>
+
+            <select name="category" required>
+
+                <option value="appetizer">
+                    Appetizer
+                </option>
+
+                <option value="entree">
+                    Entree
+                </option>
+
+                <option value="dessert">
+                    Dessert
+                </option>
+
+                <option value="beverage">
+                    Beverage
+                </option>
+
+            </select>
+
+            <br>
+
+            <button type="submit">
+                Add Menu Item
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- UPDATE MENU ITEM -->
+
+    <div class="card">
+
+        <h2>Update Menu Item</h2>
+
+        <form
+            action="/ui/menu-items/update"
+            method="POST"
+        >
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                required
+            >
+
+
+            <label>Menu Item ID</label>
+
+            <input
+                type="number"
+                name="menu_item_id"
+                required
+            >
+
+
+            <label>Name</label>
+
+            <input
+                type="text"
+                name="name"
+                required
+            >
+
+
+            <label>Description</label>
+
+            <textarea
+                name="description"
+                required
+            ></textarea>
+
+
+            <label>Price</label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="price"
+                required
+            >
+
+
+            <label>Category</label>
+
+            <select name="category" required>
+
+                <option value="appetizer">
+                    Appetizer
+                </option>
+
+                <option value="entree">
+                    Entree
+                </option>
+
+                <option value="dessert">
+                    Dessert
+                </option>
+
+                <option value="beverage">
+                    Beverage
+                </option>
+
+            </select>
+
+            <br>
+
+            <button type="submit">
+                Update Menu Item
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- DELETE MENU ITEM -->
+
+    <div class="card danger">
+
+        <h2>Delete Menu Item</h2>
+
+        <form
+            action="/ui/menu-items/delete"
+            method="POST"
+        >
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                required
+            >
+
+
+            <label>Menu Item ID</label>
+
+            <input
+                type="number"
+                name="menu_item_id"
+                required
+            >
+
+            <br>
+
+            <button type="submit">
+                Delete Menu Item
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- MENU IMAGE -->
+
+    <div class="card">
+
+        <h2>Import Menu Image</h2>
+
+        <p>
+            Upload a JPG or PNG menu image.
+            Textract will return candidate menu items.
+        </p>
+
+        <form
+            action="/ui/menu-import"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            <label>Restaurant ID</label>
+
+            <input
+                type="number"
+                name="restaurant_id"
+                required
+            >
+
+
+            <label>Menu Image</label>
+
+            <input
+                type="file"
+                name="file"
+                accept=".jpg,.jpeg,.png"
+                required
+            >
+
+            <br>
+
+            <button type="submit">
+                Upload Menu
+            </button>
+
+        </form>
+
+
+        {% if candidates %}
+
+            <h3>Textract Candidates</h3>
+
+            <table>
+
+                <tr>
+                    <th>Raw Text</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Parsed</th>
+                </tr>
+
+                {% for candidate in candidates %}
+
+                    <tr>
+
+                        <td>
+                            {{ candidate.raw_text }}
+                        </td>
+
+                        <td>
+                            {{ candidate.name or "-" }}
+                        </td>
+
+                        <td>
+
+                            {% if candidate.price %}
+
+                                ${{ "%.2f"|format(candidate.price) }}
+
+                            {% else %}
+
+                                -
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {{ candidate.parsed }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </table>
+
+        {% endif %}
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>

@@ -1,14 +1,11 @@
-
-from typing import Literal
-
+"""Pydantic models and dtos for Restaurant"""
 
 from pydantic import BaseModel, Field, ConfigDict
 
-# make some kind of validation using ai to make sure language is actual language?
 
 
 class Restaurant(BaseModel):
-
+    """Restaurant Pydantic model"""
     model_config = {"from_attributes": True}
 
     id: int
@@ -20,15 +17,16 @@ class Restaurant(BaseModel):
 
 
 class UpdateRestaurantDto(BaseModel):
-
+    """DTO for updating a restaurant"""
     model_config = ConfigDict(extra="forbid")
-    # can send just part of payload
+
     name: str | None = Field(min_length=3)
     cuisine_type: str | None = Field()
     default_menu_language: str | None = Field(default=None, min_length=2)
 
 
 class CreateRestaurantDto(BaseModel):
+    """DTO for creating a restaurant"""
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(min_length=2)
@@ -37,4 +35,5 @@ class CreateRestaurantDto(BaseModel):
 
 
 class DeleteRestaurantDto(BaseModel):
+    """DTO for deleting a restaurant"""
     restaurant_id: int
