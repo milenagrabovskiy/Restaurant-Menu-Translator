@@ -30,4 +30,4 @@ where = ["src"]
 include = ["menu_translator*"]
 
 [tool.setuptools.package-data]
-menu_translator = ["templates/*.html"]
+menu_translator = ["templates/*.html", "static/*.css"]

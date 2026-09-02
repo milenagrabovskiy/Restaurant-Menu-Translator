@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Restaurant Menu Translator</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='styles.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container py-4">
+
+
+    <h1 class="mb-4">
+        Restaurant Menu Translator
+    </h1>
+
+
+    {% if message %}
+
+    <div class="alert alert-info">
+        {{ message }}
+    </div>
+
+    {% endif %}
+
+
+    <!-- SYSTEM STATUS -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h2>
+                System Status
+            </h2>
+
+
+            <p class="endpoint">
+                GET /health/live
+            </p>
+
+            <p>
+                Status:
+
+                {% if live_status == "ok" %}
+
+                <span class="badge bg-success">
+                    ok
+                </span>
+
+                {% else %}
+
+                <span class="badge bg-danger">
+                    error
+                </span>
+
+                {% endif %}
+
+            </p>
+
+
+            <p class="endpoint">
+                GET /health/ready
+            </p>
+
+            <p>
+                Status:
+
+                {% if ready_status == "ok" %}
+
+                <span class="badge bg-success">
+                    ok
+                </span>
+
+                {% else %}
+
+                <span class="badge bg-danger">
+                    error
+                </span>
+
+                {% endif %}
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- GET ALL -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h2>
+                Get All Restaurants
+            </h2>
+
+            <p class="endpoint">
+                GET /api/v1/restaurants
+            </p>
+
+
+            <form
+                method="get"
+                action="{{ url_for('ui.restaurants_page') }}"
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="get_all"
+                >
+
+                <button
+                    class="btn btn-primary"
+                    type="submit"
+                >
+                    Get All Restaurants
+                </button>
+
+            </form>
+
+
+            {% if restaurants is not none %}
+
+                {% if restaurants %}
+
+                <div class="table-responsive mt-4">
+
+                    <table class="table table-bordered">
+
+                        <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Cuisine</th>
+                            <th>Language</th>
+                            <th>Menu Items</th>
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for restaurant in restaurants %}
+
+                        <tr>
+
+                            <td>
+                                {{ restaurant.id }}
+                            </td>
+
+                            <td>
+                                {{ restaurant.name }}
+                            </td>
+
+                            <td>
+                                {{ restaurant.cuisine_type }}
+                            </td>
+
+                            <td>
+                                {{ restaurant.default_menu_language }}
+                            </td>
+
+                            <td>
+                                {{ restaurant.menu_item_count }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                {% else %}
+
+                <div class="alert alert-secondary mt-4">
+                    No restaurants found
+                </div>
+
+                {% endif %}
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- GET ONE -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h2>
+                Get Restaurant By ID
+            </h2>
+
+            <p class="endpoint">
+                GET /api/v1/restaurants/{restaurant_id}
+            </p>
+
+
+            <form
+                method="get"
+                action="{{ url_for('ui.restaurants_page') }}"
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="get_one"
+                >
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Restaurant ID
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="number"
+                        name="restaurant_id"
+                        min="1"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    class="btn btn-primary"
+                    type="submit"
+                >
+                    Get Restaurant
+                </button>
+
+            </form>
+
+
+            {% if selected_restaurant %}
+
+            <div class="result-box mt-4">
+
+                <h3>
+                    {{ selected_restaurant.name }}
+                </h3>
+
+                <p>
+                    <strong>ID:</strong>
+                    {{ selected_restaurant.id }}
+                </p>
+
+                <p>
+                    <strong>Cuisine:</strong>
+                    {{ selected_restaurant.cuisine_type }}
+                </p>
+
+                <p>
+                    <strong>Default Language:</strong>
+                    {{ selected_restaurant.default_menu_language }}
+                </p>
+
+                <p>
+                    <strong>Menu Items:</strong>
+                    {{ selected_restaurant.menu_item_count }}
+                </p>
+
+
+                <a
+                    class="btn btn-success"
+                    href="{{ url_for(
+                        'ui.menu_items_page',
+                        restaurant_id=selected_restaurant.id
+                    ) }}"
+                >
+                    Manage Menu Items
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- CREATE -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h2>
+                Create Restaurant
+            </h2>
+
+            <p class="endpoint">
+                POST /api/v1/restaurants
+            </p>
+
+
+            <form
+                method="post"
+                action="{{ url_for('ui.create_restaurant') }}"
+            >
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Name
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Cuisine Type
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="cuisine_type"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Default Menu Language
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="default_menu_language"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    class="btn btn-primary"
+                    type="submit"
+                >
+                    Create Restaurant
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- UPDATE -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h2>
+                Update Restaurant
+            </h2>
+
+            <p class="endpoint">
+                PUT /api/v1/restaurants/{restaurant_id}
+            </p>
+
+
+            <form
+                method="post"
+                action="{{ url_for('ui.update_restaurant') }}"
+            >
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Restaurant ID
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="number"
+                        name="restaurant_id"
+                        min="1"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Name
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Cuisine Type
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="cuisine_type"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Default Menu Language
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="text"
+                        name="default_menu_language"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    class="btn btn-secondary"
+                    type="submit"
+                >
+                    Update Restaurant
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- DELETE -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h2>
+                Delete Restaurant
+            </h2>
+
+            <p class="endpoint">
+                DELETE /api/v1/restaurants/{restaurant_id}
+            </p>
+
+
+            <form
+                method="post"
+                action="{{ url_for('ui.delete_restaurant') }}"
+            >
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Restaurant ID
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="number"
+                        name="restaurant_id"
+                        min="1"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    class="btn btn-danger"
+                    type="submit"
+                >
+                    Delete Restaurant
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
