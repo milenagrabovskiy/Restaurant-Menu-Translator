@@ -1,3 +1,4 @@
+"""module to interact with AWS translate"""
 from typing import Any
 
 from menu_translator.ai.aws import get_client
@@ -8,7 +9,7 @@ def translate(text: str,
               target_lang: str,
               client: Any | None = None # for mocks
               ) -> dict:
-    """Translate text from the source language to the target language."""
+    """translate text from the source language to the target language"""
 
     translate_client = client if client is not None else get_client("translate")
 
@@ -23,3 +24,17 @@ def translate(text: str,
         "source_language": response["SourceLanguageCode"],
         "target_language": response["TargetLanguageCode"]
     }
+
+
+
+def list_languages(client: Any | None = None) -> list[dict]:
+    """return languages supported by Amazon Translate"""
+
+    translate_client = (
+        client if client is not None
+        else get_client("translate")
+    )
+
+    response = translate_client.list_languages()
+
+    return response.get("Languages", [])

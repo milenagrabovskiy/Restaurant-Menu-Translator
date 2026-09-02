@@ -1,3 +1,4 @@
+"""module for interacting with AWS Textract"""
 from typing import Any
 
 from menu_translator.ai.aws import get_client

@@ -1,9 +1,12 @@
 """test module to test image upload and bypassing AWS Textract with mocked client"""
 import io
 from unittest.mock import patch
+from flask import Flask
+
+from menu_translator.models.restaurant import Restaurant
 
 
-def test_import_menu_image_with_mocked_textract(app, restaurant):
+def test_import_menu_image_with_mocked_textract(app: Flask, restaurant: Restaurant) -> None:
     """asserts image import is successful"""
     client = app.test_client()
     restaurant_id = restaurant["id"]
@@ -22,7 +25,7 @@ def test_import_menu_image_with_mocked_textract(app, restaurant):
                                 content_type="multipart/form-data"
                                 )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     json_response = response.get_json()
 

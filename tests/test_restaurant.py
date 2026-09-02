@@ -1,7 +1,11 @@
+"""test module for testing restaurant endpoints"""
+
 import pytest
+from flask import Flask
 
 
-def test_create_restaurant(app, restaurant_payload):
+def test_create_restaurant(app: Flask, restaurant_payload: dict) -> None:
+    """asserting create restaurant endpoint works with valid payload"""
     client = app.test_client()
 
     response = client.post(
@@ -26,8 +30,8 @@ def test_create_restaurant(app, restaurant_payload):
                                                                  f"Expected: {restaurant_payload['default_menu_language']},"
                                                                  f"Actual: {json_response["default_menu_language"]}")
 
-def test_get_restaurants(app, restaurant):
-
+def test_get_restaurants(app: Flask, restaurant: dict) -> None:
+    """asserting get restaurants endpoint works"""
     client = app.test_client()
 
     response = client.get("api/v1/restaurants")
@@ -40,8 +44,8 @@ def test_get_restaurants(app, restaurant):
     assert json_response[0]["name"] == restaurant["name"]
 
 
-def test_update_restaurant(app, restaurant):
-
+def test_update_restaurant(app: Flask, restaurant: dict) -> None:
+    """asserting update restaurant endpoint works"""
     client = app.test_client()
     restaurant_id = restaurant["id"]
 
@@ -68,8 +72,8 @@ def test_update_restaurant(app, restaurant):
                                                                  f"Expected: {payload['default_menu_language']},"
                                                                  f"Actual: {json_response["default_menu_language"]}")
 
-def test_delete_restaurant(app, restaurant):
-
+def test_delete_restaurant(app: Flask, restaurant: dict) -> None:
+    """asserting delete restaurant endpoint works"""
     client = app.test_client()
     restaurant_id = restaurant["id"]
 

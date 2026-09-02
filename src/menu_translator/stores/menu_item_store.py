@@ -1,6 +1,7 @@
+"""menu item service layer for orchestrating business logic"""
 from decimal import Decimal
 
-from sqlalchemy import select, text, func
+from sqlalchemy import select, func
 
 from menu_translator.models.db_models.menu_item_orm import MenuItemRecord
 from menu_translator.models.menu_item import MenuItem, UpdateMenuItemDto, CreateMenuItemDto
@@ -14,6 +15,7 @@ def find_menu_items_for_restaurant(restaurant_id: int,
                                    name: str | None=None,
                                    sort: str | None=None
                                    ) -> list[MenuItem]:
+    """returns menu items for a restaurant with optional filtering sorting and translation"""
 
     stmt = select(MenuItemRecord).where(MenuItemRecord.restaurant_id == restaurant_id)
 
@@ -47,6 +49,7 @@ def find_menu_items_for_restaurant(restaurant_id: int,
 
 
 def find_menu_item_by_id(restaurant_id: int, menu_item_id: int) -> MenuItem | None:
+    """returns a menu item by its id and restaurant id"""
     stmt = select(MenuItemRecord).where(MenuItemRecord.id == menu_item_id,
                                         MenuItemRecord.restaurant_id == restaurant_id)
     record = db.session.scalar(stmt)
@@ -54,10 +57,7 @@ def find_menu_item_by_id(restaurant_id: int, menu_item_id: int) -> MenuItem | No
 
 
 def create_new_menu_item(record: MenuItemRecord) -> MenuItem:
-# def create_new_menu_item(restaurant_id, menu_item_data: dict) -> MenuItem:
-    # create_dto = CreateMenuItemDto.model_validate(menu_item_data)
-    #
-    # record = MenuItemRecord(restaurant_id=restaurant_id, **create_dto.model_dump())
+    """validates and creates a new menu item with its detected source language"""
 
     db.session.add(record)
     db.session.commit()
@@ -66,7 +66,7 @@ def create_new_menu_item(record: MenuItemRecord) -> MenuItem:
 
 
 def update_existing_menu_item(restaurant_id: int, menu_item_id: int, update_data: dict) -> MenuItem | None:
-
+    """validates and updates an existing menu item and re-detects its source language"""
     record = db.session.get(MenuItemRecord, menu_item_id)
     if record is None:
         return None
@@ -83,6 +83,7 @@ def update_existing_menu_item(restaurant_id: int, menu_item_id: int, update_data
 
 
 def remove_menu_item(restaurant_id: int, menu_item_id: int) -> bool:
+    """validates deletion confirmation and removes a menu item"""
     record = db.session.get(MenuItemRecord, menu_item_id)
 
     if record is None:

@@ -1,11 +1,11 @@
+"""Restaurant ORM"""
 from menu_translator.extensions import db
-from sqlalchemy import ForeignKey, String, Text, Numeric
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from decimal import Decimal
 
 
 class RestaurantRecord(db.Model):
-
+    """Restaurant Record pydantic model representing table in the database"""
     __tablename__ = "restaurant"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -20,5 +20,5 @@ class RestaurantRecord(db.Model):
                                                   )
     @property
     def menu_item_count(self):
-
+        """returns the count of menu items for a restaurant"""
         return len(self.menu_items)

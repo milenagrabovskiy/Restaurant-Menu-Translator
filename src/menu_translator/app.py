@@ -1,3 +1,4 @@
+"""module that creates and configures a flask app. errorhandler() is used to handle errors and return consistent responses"""
 import time
 import uuid
 import structlog
@@ -9,6 +10,8 @@ from pydantic import ValidationError
 from menu_translator.blueprints.health import health_bp
 from menu_translator.blueprints.menu_item_routes import menu_item_bp
 from menu_translator.blueprints.restaurant_routes import restaurants_bp
+from menu_translator.blueprints.ui_routes import ui_bp
+
 from menu_translator.responses import error_response
 from menu_translator.errors import RestaurantManagementError, AWSError
 from menu_translator.extensions import db
@@ -21,13 +24,16 @@ migrate = Migrate()
 
 
 
-def create_app():
+def create_app(config: dict | None = None) -> Flask:
+    """creates, registers blueprints, and configures a Flask app instance.
+    Uses Flask errorhandler() to handle errors centrally"""
 
     structlog.configure(processors=[structlog.processors.JSONRenderer()])
 
     logger = structlog.get_logger()
 
     app = Flask(__name__)
+
 
     @app.before_request
     def before_request():
@@ -54,6 +60,7 @@ def create_app():
     app.register_blueprint(health_bp, url_prefix="/health")
     app.register_blueprint(restaurants_bp, url_prefix="/api/v1/restaurants")
     app.register_blueprint(menu_item_bp, url_prefix="/api/v1/restaurants")
+    app.register_blueprint(ui_bp)
 
     # error handlers
     @app.errorhandler(RestaurantManagementError)
@@ -76,9 +83,6 @@ def create_app():
     @app.errorhandler(404)
     def handle_not_found_error(error):
         return error_response(code="resource_not_found", status=404, detail="The requested resource does not exist")
-
-
-
 
 
     return app

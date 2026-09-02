@@ -15,13 +15,14 @@ VALID_SORT_QUERY = {"price_asc", "price_desc", "name_asc", "name_desc"}
 
 
 def get_menu_items(restaurant_id: int,
-                   category: str | None,
-                   lang: str | None,
-                   min_price: float | None,
-                   max_price: float | None,
-                   name: str | None,
-                   sort: str | None
-                   ) -> list[dict|MenuItem]:
+                   category: str | None = None,
+                   lang: str | None = None,
+                   min_price: float | None = None,
+                   max_price: float | None = None,
+                   name: str | None = None,
+                   sort: str | None = None
+                   ) -> list[MenuItem]:
+    """return menu items for a restaurant with optional filtering, sorting, and translation"""
 
     if not restaurant_service.find_restaurant_by_id(restaurant_id):
         raise RestaurantManagementError(code="Restaurant_not_found",
@@ -79,6 +80,7 @@ def get_menu_items(restaurant_id: int,
 
 
 def find_menu_item_by_id(restaurant_id: int, menu_item_id: int) -> MenuItem:
+    """return a menu item by its id and restaurant id"""
 
     menu_item = menu_item_store.find_menu_item_by_id(restaurant_id, menu_item_id)
 
@@ -90,7 +92,7 @@ def find_menu_item_by_id(restaurant_id: int, menu_item_id: int) -> MenuItem:
 
 
 def create_new_menu_item(restaurant_id: int, menu_item_data: dict) -> MenuItem:
-
+    """validate and create a new menu item with its detected source language"""
     create_dto = CreateMenuItemDto.model_validate(menu_item_data)
 
     restaurant = restaurant_service.find_restaurant_by_id(restaurant_id)
@@ -119,6 +121,7 @@ def create_new_menu_item(restaurant_id: int, menu_item_data: dict) -> MenuItem:
 
 
 def update_existing_menu_item(restaurant_id: int, menu_item_id: int, menu_item_data: dict) -> MenuItem:
+    """validate and update an existing menu item and re-detect its source language"""
 
     update_dto = UpdateMenuItemDto.model_validate(menu_item_data)
 
@@ -147,6 +150,8 @@ def update_existing_menu_item(restaurant_id: int, menu_item_id: int, menu_item_d
 
 
 def remove_menu_item(restaurant_id: int, menu_item_id: int, menu_item_data: dict) -> None:
+    """validate the deletion confirmation and remove a menu item"""
+
 
     delete_dto = DeleteMenuItemDto.model_validate(menu_item_data)
 
