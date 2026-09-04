@@ -1,12 +1,25 @@
-# Restaurant-Menu-Translator
+# Restaurant Menu Translator
 
-## Create and activate a virtual environment
+## Create and Activate a Virtual Environment
+
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate (macOS)
+source .venv/bin/activate
 ```
 
-## Activate virtual environment
+## Running the Application Locally
+
+An explicit Flask command can be used to run the application locally:
+
+```bash
+python -m flask --app src/menu_translator/app.py:create_app run
+```
+
+If `FLASK_APP` is configured, the application can instead be started with:
+
+```bash
+flask run
+```
 
 ## Build the Docker Image
 
@@ -24,117 +37,119 @@ To start the Flask API and PostgreSQL containers:
 docker compose up
 ```
 
+To build the image and start the containers:
 
-## Edge Case Handling
+```bash
+docker compose up --build
+```
 
-### Comprehend or Translate Is Unavailable
+# Edge Case Handling
 
-If Comprehend fails when I am trying to detect the language of a menu item, I catch the AWS error and return my own `AWSError`.
+## Comprehend or Translate Is Unavailable
 
-In this case I do not save the menu item because I don't have a reliable source language.
+If Comprehend fails while detecting the language of a menu item, the AWS exception is caught and converted into an application-level AWS error.
 
-I handle Translate errors in a similar way. If the translation call fails, I return an application error
+In this case, the menu item is not saved because the application does not have a reliable source language.
 
-instead of exposing the original AWS error to the client.
+Translate errors are handled similarly. If the translation call fails, an application error is returned instead of exposing the original AWS exception to the client.
 
+## Requested Language Is the Same as the Source Language
 
-### Requested Language Is the Same as the Source Language
+If the requested language is the same as the language of the original menu item, the application does not call Amazon Translate.
 
-If the user requests the same language that the menu item is already written in, I don't call Translate.
+Instead, it returns the original menu item and avoids an unnecessary AWS request.
 
-I just return the original menu item to avoid making an unnecessary AWS call.
+## Short Item Name
 
+Short menu item names may not provide enough text for Amazon Comprehend to reliably detect a language.
 
-### Short Item Name
+To improve detection, both the item name and description are sent to Comprehend.
 
-Short menu item names may not give Comprehend enough text to reliably detect a language.
+The application uses a confidence threshold of 0.70. If the confidence is below this threshold, or no language is returned, the restaurant's default_menu_language is used instead.
 
-To help with this, I send both the name and description to Comprehend.
+## Invalid Price or Category
 
-I use a confidence threshold of `0.70`. If the confidence is lower than that, or no language is returned, I use the restaurant's `default_menu_language` instead.
+Pydantic validates request data before it reaches the main service logic.
 
+For example, a negative price or invalid category returns a `422` response instead of being saved to the database.
 
-### Invalid Price or Category
-
-Pydantic validates the request data before it gets to the main service logic.
-
-For example, a negative price or an invalid category will return a `422` response instead of being saved to the database.
-
-The supported categories are:
+Supported categories are:
 
 - appetizer
 - entree
 - dessert
 - beverage
 
+## Textract Is Unavailable or Cannot Read the Image
 
-### Textract Is Unavailable or Cannot Read the Image
+Menu uploads support JPG, JPEG, and PNG files with a maximum file size of 5 MB.
 
-Menu uploads only allow JPG, JPEG, and PNG files, and I limit the upload size to 5 MB.
+If the file type is unsupported, the endpoint returns a `422`.
 
-If the file type is not supported, the endpoint returns a `422`. If the Textract call fails, I return `text_extraction_failed`
+If the Textract call fails, the application returns a `text_extraction_failed` status with an empty list of candidates.
 
-with an empty list of candidates instead of returning a 500 error.
+If Textract succeeds but no usable text is found, the application returns `no_text_found` with an empty candidate list.
 
-If Textract works but doesn't find any usable text, I return `no_text_found` with an empty candidate list.
+## OCR Text Cannot Be Parsed
 
+Amazon Textract may return many lines of text, so the application uses a simple regular expression to identify lines where a price appears at the end.
 
-### OCR Text Cannot Be Parsed
+For example: Pizza ... 14.00
 
-Textract gives numerous lines of text, so I use a simple regex to look for lines where a price appears at the end, for example:
+If a name and price can be extracted, the candidate is returned with: parsed: true
 
-`Pizza ... 14.00`
+If a line cannot be parsed, the original line is still returned as raw_text with: parsed: false
 
-If I can find a name and price, I return the candidate with `parsed: true`
+The raw text is preserved so that restaurant staff can manually review information that could not be parsed.
 
-If the line couldn't be parsed, I still return the original line as `raw_text` and set `parsed: false`
+Candidate menu items are not automatically saved to the database. A restaurant staff member can review the extracted candidates before deciding whether they should be added to the actual menu.
 
-I chose to keep the raw text so that someone can review it manually instead of losing the data. 
+## Concurrent Mutations
 
-The candidates are also not automatically saved to the database. Once a restaurant staff member reviews it,
+The application does not currently implement special locking for concurrent updates.
 
-there could be a decision to save the menu to the database.
+If two users update the same menu item at approximately the same time, the last committed update may overwrite the earlier update.
 
+The application relies on normal SQLAlchemy and PostgreSQL behavior. Optimistic locking or version checking could be added in the future if needed.
 
-### Concurrent Mutations
+# Dockerfile and Docker Compose
 
-I did not add special locking for concurrent updates. If two users update the same menu item at around the same time,
+The Dockerfile defines how the application image is built.
 
-the last update that is committed may overwrite the earlier one. I rely on the normal SQLAlchemy and PostgreSQL behavior.
+Docker Compose is used to run multiple containers together. For this project, Docker Compose starts both the Flask application and PostgreSQL.
 
-Advanced locking or version checking could be added later if needed.
+To build and start the application:
 
-### Dockerfile and docker compose
+```bash
+docker compose up --build
+```
 
-A docker image can be created by running the docker build . command
+If the image has already been built:
 
-A docker compose yaml file can run several containers together. The docker compose
+```bash
+docker compose up
+```
 
-for this project creates a container for flask as well as postgres. This file is executed with the command:
+# AWS EC2 Deployment
 
-`docker compose up --build` to create an image first, or `docker compose up`
+The `main` branch contains the code used for local development.
 
-if an image exists already. 
+A separate `aws-deployment` branch contains the changes needed to deploy the project to Amazon EC2. These include the browser UI, HTML templates, and deployment-specific configuration changes.
 
+The deployed application is currently available at: http://52.207.236.115/
 
-### AWS EC2 Deployment
+The application is containerized with Docker, stored in a private Amazon ECR repository, and deployed to EC2 using Docker Compose.
 
-The main branch contains code for local development. A separate `aws-deployment` branch 
+AWS access from the deployed application is provided through an EC2 IAM role rather than AWS credentials stored inside the application.
 
-has changes and additions to this project for deployment on a Amazon EC2 instance.
+# Pytest Test Suite
 
-These changes include a blueprint for the UI, HTML files, and several configuration changes
+The project currently contains 23 passing tests covering both positive and negative paths.
 
-across multiple files. The deployed UI can temporarily be reached at: http://52.207.236.115/  
+All API endpoints are tested, and AWS service calls are mocked using `patch` from `unittest.mock`.
 
+# Kanban Board
 
-### Pytest Test Suite
+The Kanban board for this project is available at:
 
-This project contains 23 passing tests, testing positive and negative paths. All endpoints are tested
-
-and calls to AWS are mocked with `patch` from `unittest.mock`
-
-
-### KanBan Board
-
-The KanBan board for this project can be viewed at: https://github.com/users/milenagrabovskiy/projects/1
+https://github.com/users/milenagrabovskiy/projects/1
