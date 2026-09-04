@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from menu_translator.blueprints.health import health_bp
 from menu_translator.blueprints.menu_item_routes import menu_item_bp
 from menu_translator.blueprints.restaurant_routes import restaurants_bp
-from menu_translator.blueprints.ui_routes import ui_bp
+
 
 from menu_translator.responses import error_response
 from menu_translator.errors import RestaurantManagementError, AWSError
