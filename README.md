@@ -103,3 +103,38 @@ I did not add special locking for concurrent updates. If two users update the sa
 the last update that is committed may overwrite the earlier one. I rely on the normal SQLAlchemy and PostgreSQL behavior.
 
 Advanced locking or version checking could be added later if needed.
+
+### Dockerfile and docker compose
+
+A docker image can be created by running the docker build . command
+
+A docker compose yaml file can run several containers together. The docker compose
+
+for this project creates a container for flask as well as postgres. This file is executed with the command:
+
+`docker compose up --build` to create an image first, or `docker compose up`
+
+if an image exists already. 
+
+
+### AWS EC2 Deployment
+
+The main branch contains code for local development. A separate `aws-deployment` branch 
+
+has changes and additions to this project for deployment on a Amazon EC2 instance.
+
+These changes include a blueprint for the UI, HTML files, and several configuration changes
+
+across multiple files. The deployed UI can temporarily be reached at: http://52.207.236.115/  
+
+
+### Pytest Test Suite
+
+This project contains 23 passing tests, testing positive and negative paths. All endpoints are tested
+
+and calls to AWS are mocked with `patch` from `unittest.mock`
+
+
+### KanBan Board
+
+The KanBan board for this project can be viewed at: https://github.com/users/milenagrabovskiy/projects/1
