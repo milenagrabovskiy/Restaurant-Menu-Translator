@@ -60,7 +60,7 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(health_bp, url_prefix="/health")
     app.register_blueprint(restaurants_bp, url_prefix="/api/v1/restaurants")
     app.register_blueprint(menu_item_bp, url_prefix="/api/v1/restaurants")
-    app.register_blueprint(ui_bp)
+    
 
     # error handlers
     @app.errorhandler(RestaurantManagementError)
