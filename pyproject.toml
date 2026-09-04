@@ -13,7 +13,8 @@ dependencies = [
     "python-dotenv>=1.0",
     "structlog>=26.1.0",
     "requests>=2.34.2",
-    "boto3>=1.43.73"
+    "boto3>=1.43.73",
+    "gunicorn"
 ]
 
 [project.optional-dependencies]
