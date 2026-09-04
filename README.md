@@ -146,6 +146,8 @@ The project currently contains 23 passing tests covering both positive and negat
 
 All API endpoints are tested, and AWS service calls are mocked using patch from unittest.mock.
 
+Simply running `pytest` from the project root will execute all tests.
+
 # Kanban Board
 
 The Kanban board for this project is available at:
